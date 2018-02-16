@@ -4,7 +4,7 @@ import ilog.concert.IloNumExpr;
 import ilog.cplex.IloCplex;
 
 public class SimpleAlgorithm {
-    public void cplexSolution(int[][][] p) throws IloException {
+    public void cplexSolution(int[][][] p, int number_of_threads) throws IloException {
         int l = p.length;
         int n = p[0].length;
         for (int i = 0; i < l; ++i) {
@@ -16,6 +16,7 @@ public class SimpleAlgorithm {
         }
 
         IloCplex cplex = new IloCplex();
+        cplex.setParam(IloCplex.IntParam.Threads, number_of_threads);
         cplex.boolVar();
         IloIntVar[][] r = new IloIntVar[2 * n][];
         for (int i = 0; i < 2 * n; ++i) {
@@ -73,19 +74,19 @@ public class SimpleAlgorithm {
         // 7
         IloNumExpr obj = cplex.constant(0);
         for (int i = 0; i < l; ++i) {
-            obj = cplex.sum(obj, cplex.sum(p_kl_indic[i], 0, n));
+            obj = cplex.sum(obj, cplex.sum(p_kl_indic[i]));
         }
         cplex.addMaximize(obj);
 
         cplex.solve();
 
-        int objvalue = (int) cplex.getObjValue();
+        int objvalue = (int) Math.round(cplex.getObjValue());
         System.out.println("Objective value : " + objvalue);
         System.out.println("Builded edges : ");
         for (int i = 0; i < 2 * n; ++i) {
             double[] resR = cplex.getValues(r[i]);
             for (int j = 0; j < i; ++j) {
-                if (resR[j] == 1.0)
+                if (resR[j] > 0.5)
                     System.out.println((j + 1) + " " + (i + 1));
             }
         }
